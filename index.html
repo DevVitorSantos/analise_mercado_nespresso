@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Análise Competitiva - Mercado de Cápsulas de Café</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.05) 10px,
+                rgba(255,255,255,0.05) 20px
+            );
+            animation: move 20s linear infinite;
+        }
+
+        @keyframes move {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            z-index: 1;
+            position: relative;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            z-index: 1;
+            position: relative;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+        }
+
+        .tab.active {
+            color: #3498db;
+            background: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .competitor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .competitor-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .competitor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .competitor-card.nespresso {
+            border-color: #2ecc71;
+        }
+
+        .competitor-card.dolce-gusto {
+            border-color: #e74c3c;
+        }
+
+        .competitor-card.cafelor {
+            border-color: #3498db;
+        }
+
+        .competitor-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .competitor-title::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .nespresso .competitor-title::before { background: #2ecc71; }
+        .dolce-gusto .competitor-title::before { background: #e74c3c; }
+        .cafelor .competitor-title::before { background: #3498db; }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .metric-value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .score-bar {
+            width: 100px;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            transition: width 1s ease;
+            border-radius: 4px;
+        }
+
+        .score-excellent { background: linear-gradient(90deg, #2ecc71, #27ae60); }
+        .score-good { background: linear-gradient(90deg, #3498db, #2980b9); }
+        .score-average { background: linear-gradient(90deg, #f39c12, #e67e22); }
+        .score-poor { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+        .insight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-box::before {
+            content: '💡';
+            font-size: 2rem;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            opacity: 0.3;
+        }
+
+        .insight-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .seo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .seo-table th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .seo-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .seo-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .blog-post {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3498db;
+        }
+
+        .swot-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .swot-quadrant {
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .swot-quadrant::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            opacity: 0.9;
+        }
+
+        .swot-quadrant > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .swot-strengths { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .swot-weaknesses { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .swot-opportunities { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .swot-threats { background: linear-gradient(135deg, #f39c12, #e67e22); }
+
+        .swot-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .swot-list {
+            list-style: none;
+        }
+
+        .swot-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .swot-list li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .complaint-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #e74c3c;
+        }
+
+        .complaint-title {
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-container {
+            margin: 15px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 2s ease;
+            animation: progressAnimation 2s ease;
+        }
+
+        @keyframes progressAnimation {
+            from { width: 0; }
+        }
+
+        .ad-example {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f0f0f0;
+        }
+
+        .ad-platform {
+            background: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .swot-matrix {
+                grid-template-columns: 1fr;
+            }
+
+            .competitor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard Análise Competitiva</h1>
+            <p>Mercado de Cápsulas de Café - Foco em Vertuo Line</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="openTab(event, 'mercado')">📊 Análise Mercado</button>
+            <button class="tab" onclick="openTab(event, 'blog')">📝 Blog & E-E-A-T</button>
+            <button class="tab" onclick="openTab(event, 'anuncios')">📱 Análise de Anúncios</button>
+            <button class="tab" onclick="openTab(event, 'reclamacoes')">⚠️ Reclamações</button>
+            <button class="tab" onclick="openTab(event, 'swot')">🎯 Análise SWOT</button>
+        </div>
+
+        <div id="mercado" class="tab-content active">
+            <h2>📊 Análise de Mercado</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">32%</div>
+                    <div class="stat-label">Taxa Reciclagem Global</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">30+</div>
+                    <div class="stat-label">Blends Disponíveis</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6.25%</div>
+                    <div class="stat-label">CAGR 2025-2035</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$36.2B</div>
+                    <div class="stat-label">Mercado até 2033</div>
+                </div>
+            </div>
+
+            <div class="competitor-grid">
+                <div class="competitor-card nespresso">
+                    <div class="competitor-title">Nespresso</div>
+                    <div class="metric-row">
+                        <div class="metric-label">Performance Técnica</div>
+                        <div class="metric-value">
+                            <span>92</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-excellent" style="width: 92%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">SEO Score</div>
+                        <div class="metric-value">
+                            <span>88</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-good" style="width: 88%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">UX/Design</div>
+                        <div class="metric-value">
+                            <span>95</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-excellent" style="width: 95%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">Foco Vertuo</div>
+                        <div class="metric-value">
+                            <span>90</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-excellent" style="width: 90%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="competitor-card dolce-gusto">
+                    <div class="competitor-title">Nescafé Dolce Gusto</div>
+                    <div class="metric-row">
+                        <div class="metric-label">Performance Técnica</div>
+                        <div class="metric-value">
+                            <span>78</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-good" style="width: 78%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">SEO Score</div>
+                        <div class="metric-value">
+                            <span>72</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-good" style="width: 72%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">UX/Design</div>
+                        <div class="metric-value">
+                            <span>75</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-good" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">Variedade</div>
+                        <div class="metric-value">
+                            <span>85</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-good" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="competitor-card cafelor">
+                    <div class="competitor-title">Café Lor</div>
+                    <div class="metric-row">
+                        <div class="metric-label">Performance Técnica</div>
+                        <div class="metric-value">
+                            <span>65</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-average" style="width: 65%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">SEO Score</div>
+                        <div class="metric-value">
+                            <span>58</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-average" style="width: 58%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">UX/Design</div>
+                        <div class="metric-value">
+                            <span>62</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-average" style="width: 62%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-label">Preço Competitivo</div>
+                        <div class="metric-value">
+                            <span>82</span>
+                            <div class="score-bar">
+                                <div class="score-fill score-good" style="width: 82%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>Análise SEO Detalhada</h3>
+                <table class="seo-table">
+                    <thead>
+                        <tr>
+                            <th>Empresa</th>
+                            <th>Meta Title</th>
+                            <th>H1 Structure</th>
+                            <th>Links Internos</th>
+                            <th>CTAs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Nespresso</strong></td>
+                            <td>Otimizado (55 chars)</td>
+                            <td>Estrutura correta H1-H6</td>
+                            <td>120+ links relevantes</td>
+                            <td>8 CTAs por página</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dolce Gusto</strong></td>
+                            <td>Adequado (48 chars)</td>
+                            <td>H1-H4 implementado</td>
+                            <td>85+ links internos</td>
+                            <td>5 CTAs por página</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Café Lor</strong></td>
+                            <td>Básico (42 chars)</td>
+                            <td>H1-H3 básica</td>
+                            <td>45 links internos</td>
+                            <td>3 CTAs por página</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">💡 Insights Principais</div>
+                <ul>
+                    <li><strong>Nespresso domina em performance:</strong> 92% de score técnico vs 78% Dolce Gusto</li>
+                    <li><strong>Vertuo Line diferencial:</strong> Sistema exclusivo para grandes xícaras</li>
+                    <li><strong>Oportunidade de preço:</strong> Café Lor compete apenas no preço (82% score)</li>
+                    <li><strong>SEO superior:</strong> Nespresso tem 35% mais links internos que concorrentes</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="blog" class="tab-content">
+            <h2>📝 Blog & E-E-A-T Analysis</h2>
+            
+            <div class="chart-container">
+                <h3>Score E-E-A-T por Concorrente</h3>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Nespresso - Experience</span>
+                        <span>92/100</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill score-excellent" style="width: 92%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Nespresso - Expertise</span>
+                        <span>88/100</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill score-good" style="width: 88%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Dolce Gusto - Experience</span>
+                        <span>78/100</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill score-good" style="width: 78%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Café Lor - Experience</span>
+                        <span>55/100</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill score-average" style="width: 55%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="competitor-grid">
+                <div class="blog-post">
+                    <h4>Nespresso - Últimas Postagens</h4>
+                    <p><strong>"Sustentabilidade e Café"</strong> - Foco em programa AAA</p>
+                    <p><strong>"Vertuo: Revolução do Café"</strong> - Tecnologia Centrifusion</p>
+                    <p><strong>"Receitas Exclusivas"</strong> - Criações com cápsulas</p>
+                    <p><strong>"George Clooney Partnership"</strong> - Campanhas premium</p>
+                </div>
+
+                <div class="blog-post">
+                    <h4>Dolce Gusto - Conteúdo</h4>
+                    <p><strong>"Variedade de Sabores"</strong> - 30+ opções disponíveis</p>
+                    <p><strong>"Café com Leche"</strong> - Especialidades latino-americanas</p>
+                    <p><strong>"Programa NEO"</strong> - Compostagem de cápsulas</p>
+                    <p><strong>"Assinatura Club"</strong> - Fidelização de clientes</p>
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">💡 Análise E-E-A-T</div>
+                <ul>
+                    <li><strong>Experience:</strong> Nespresso lidera com 40+ anos no mercado</li>
+                    <li><strong>Expertise:</strong> Programa AAA Quality de sustentabilidade</li>
+                    <li><strong>Authority:</strong> Parceria com George Clooney aumenta credibilidade</li>
+                    <li><strong>Trust:</strong> Certificação B-Corp desde 2022</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="anuncios" class="tab-content">
+            <h2>📱 Análise de Anúncios</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">24M</div>
+                    <div class="stat-label">Audiência Facebook</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">2M</div>
+                    <div class="stat-label">Seguidores Instagram</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">167%</div>
+                    <div class="stat-label">Aumento Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">20.6%</div>
+                    <div class="stat-label">Lift Conversões</div>
+                </div>
+            </div>
+
+            <div class="ad-example">
+                <div class="ad-platform">Facebook Ads</div>
+                <h4>Campanha "A Cup Above"</h4>
+                <p><strong>Segmentação:</strong> Millennials 25-34, interessados em luxo</p>
+                <p><strong>Formato:</strong> Carrossel com influencers lifestyle</p>
+                <p><strong>CTA:</strong> "Descubra Nespresso Vertuo"</p>
+                <p><strong>Performance:</strong> +161% em pedidos vs ano anterior</p>
+            </div>
+
+            <div class="ad-example">
+                <div class="ad-platform">Google Ads</div>
+                <h4>Campanha "Vertuo Revolution"</h4>
+                <p><strong>Palavras-chave:</strong> "máquina café cápsula", "nespresso vertuo"</p>
+                <p><strong>Formato:</strong> Search + Shopping + Display</p>
+                <p><strong>CTA:</strong> "Compre com 10% OFF no APP"</p>
+                <p><strong>ROAS:</strong> +56% vs campanha anterior</p>
+            </div>
+
+            <div class="ad-example">
+                <div class="ad-platform">Instagram Stories</div>
+                <h4>Influencer Marketing</h4>
+                <p><strong>Influencers:</strong> Adam Gallagher, Aimee Song, Sazan Hendrix</p>
+                <p><strong>Hashtag:</strong> #ACupAbove #UnforgettableTaste</p>
+                <p><strong>Formato:</strong> Stories 15s + Feed posts</p>
+                <p><strong>Engajamento:</strong> 8.5% taxa média</p>
+            </div>
+
+            <div class="competitor-grid">
+                <div class="competitor-card dolce-gusto">
+                    <div class="competitor-title">Dolce Gusto - Anúncios</div>
+                    <p><strong>Facebook:</strong> Foco em variedade de sabores</p>
+                    <p><strong>Google:</strong> Palavras genéricas "café cápsula"</p>
+                    <p><strong>Investimento:</strong> Estimado 40% menor que Nespresso</p>
+                    <p><strong>Creative:</strong> Menos premium, mais acessível</p>
+                </div>
+
+                <div class="competitor-card cafelor">
+                    <div class="competitor-title">Café Lor - Estratégia</div>
+                    <p><strong>Facebook:</strong> Presença limitada</p>
+                    <p><strong>Google:</strong> Foco em "frete grátis"</p>
+                    <p><strong>Investimento:</strong> Muito limitado</p>
+                    <p><strong>Oportunidade:</strong> Aumentar presença digital</p>
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">💡 Insights Publicitários</div>
+                <ul>
+                    <li><strong>Nespresso domina premium:</strong> George Clooney + influencers lifestyle</li>
+                    <li><strong>Vertuo foco crescente:</strong> 90% das campanhas mencionam a linha</li>
+                    <li><strong>Meta performance:</strong> 20.6% lift em conversões online + 12% offline</li>
+                    <li><strong>Gap de concorrentes:</strong> Dolce Gusto investe 40% menos</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="reclamacoes" class="tab-content">
+            <h2>⚠️ Análise Reclame Aqui</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">82.3%</div>
+                    <div class="stat-label">Taxa Resolução</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4.6</div>
+                    <div class="stat-label">Dias Resposta</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3.8/5</div>
+                    <div class="stat-label">Nota Consumidor</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">15%</div>
+                    <div class="stat-label">Aumento Reclamações</div>
+                </div>
+            </div>
+
+            <div class="complaint-card">
+                <div class="complaint-title">Principais Reclamações - Nespresso</div>
+                <ul>
+                    <li><strong>Máquina Vertuo defeituosa:</strong> "Estou com problema na minha máquina Vertuo Pop pela terceira vez"</li>
+                    <li><strong>Falta de peças para reparo:</strong> "Não há mais peças para consertar tal modelo"</li>
+                    <li><strong>Problemas de entrega:</strong> "Pedido foi entregue mas não chegou"</li>
+                    <li><strong>Vouchers não funcionam:</strong> "Comprei máquina com voucher R$100 mas não consigo usar"</li>
+                    <li><strong>SMS excessivo:</strong> "Recebo 2-3 SMS por dia com promoções"</li>
+                </ul>
+            </div>
+
+            <div class="complaint-card">
+                <div class="complaint-title">Reclamações - Dolce Gusto</div>
+                <ul>
+                    <li><strong>Qualidade cápsulas:</strong> "Sabor inconsistente entre lotes"</li>
+                    <li><strong>Preço elevado:</strong> "Cápsulas muito caras para a qualidade"</li>
+                    <li><strong>Disponibilidade:</strong> "Sabores descontinuados sem aviso"</li>
+                    <li><strong>Máquina quebra:</strong> "Vazamentos após 6 meses de uso"</li>
+                    <li><strong>Atendimento:</strong> "Demora para responder WhatsApp"</li>
+                </ul>
+            </div>
+
+            <div class="complaint-card">
+                <div class="complaint-title">Reclamações - Café Lor</div>
+                <ul>
+                    <li><strong>Frete alto:</strong> "Só grátis acima R$250"</li>
+                    <li><strong>Site lento:</strong> "Demora para carregar páginas"</li>
+                    <li><strong>Compatibilidade:</strong> "Cápsulas não encaixam bem"</li>
+                    <li><strong>Sabor fraco:</strong> "Não tem a intensidade prometida"</li>
+                    <li><strong>Embalagem:</strong> "Chegam danificadas"</li>
+                </ul>
+            </div>
+
+            <div class="chart-container">
+                <h3>Análise Comparativa de Fraquezas</h3>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Nespresso - Problemas Técnicos</span>
+                        <span>35%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill score-poor" style="width: 35%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Dolce Gusto - Preço/Qualidade</span>
+                        <span>45%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill score-poor" style="width: 45%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Café Lor - Experiência Digital</span>
+                        <span>65%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill score-average" style="width: 65%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">💡 Oportunidades de Melhoria</div>
+                <ul>
+                    <li><strong>Nespresso:</strong> Melhorar QA da linha Vertuo e peças de reposição</li>
+                    <li><strong>Versus Dolce Gusto:</strong> Vantagem em qualidade, mas cuidar da durabilidade</li>
+                    <li><strong>Versus Café Lor:</strong> Manter vantagem em experiência digital</li>
+                    <li><strong>Foco Vertuo:</strong> Reduzir defeitos técnicos específicos da linha</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="swot" class="tab-content">
+            <h2>🎯 Análise SWOT - Nespresso Vertuo</h2>
+            
+            <div class="swot-matrix">
+                <div class="swot-quadrant swot-strengths">
+                    <div class="swot-title">💪 FORÇAS</div>
+                    <ul class="swot-list">
+                        <li>Marca premium consolidada (40+ anos)</li>
+                        <li>Tecnologia Centrifusion exclusiva</li>
+                        <li>Vertuo para mercado americano</li>
+                        <li>George Clooney como embaixador</li>
+                        <li>32% taxa reciclagem global</li>
+                        <li>Certificação B-Corp desde 2022</li>
+                        <li>802 boutiques em 500+ cidades</li>
+                        <li>30+ blends disponíveis</li>
+                    </ul>
+                </div>
+
+                <div class="swot-quadrant swot-weaknesses">
+                    <div class="swot-title">⚠️ FRAQUEZAS</div>
+                    <ul class="swot-list">
+                        <li>Preço premium limita público</li>
+                        <li>Problemas técnicos Vertuo Pop</li>
+                        <li>Falta peças reposição (obsolescência)</li>
+                        <li>Sistema fechado (lock-in)</li>
+                        <li>SMS marketing excessivo</li>
+                        <li>Dependência do sistema de cápsulas</li>
+                        <li>Concorrência cápsulas compatíveis</li>
+                        <li>Questões ambientais (alumínio)</li>
+                    </ul>
+                </div>
+
+                <div class="swot-quadrant swot-opportunities">
+                    <div class="swot-title">🚀 OPORTUNIDADES</div>
+                    <ul class="swot-list">
+                        <li>Mercado $36.2B até 2033 (CAGR 6.25%)</li>
+                        <li>Expansão Vertuo no Brasil</li>
+                        <li>Parcerias sustentáveis (Oatly)</li>
+                        <li>Cápsulas compostáveis (papel)</li>
+                        <li>Marketing para Millennials</li>
+                        <li>E-commerce e assinaturas</li>
+                        <li>Influencer marketing</li>
+                        <li>Cafés especiais limitados</li>
+                    </ul>
+                </div>
+
+                <div class="swot-quadrant swot-threats">
+                    <div class="swot-title">⚡ AMEAÇAS</div>
+                    <ul class="swot-list">
+                        <li>Concorrência crescente (Dolce Gusto)</li>
+                        <li>Cápsulas compatíveis baratas</li>
+                        <li>Bean-to-cup machines</li>
+                        <li>Ready-to-drink coffees</li>
+                        <li>Pressão ambiental (sustentabilidade)</li>
+                        <li>Inflação custos produção</li>
+                        <li>Mudanças hábitos consumo</li>
+                        <li>Regulamentações embalagens</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>Estratégias Recomendadas 2025</h3>
+                <div class="competitor-grid">
+                    <div class="competitor-card nespresso">
+                        <div class="competitor-title">🎯 Prioridade ALTA</div>
+                        <ul>
+                            <li><strong>Resolver problemas Vertuo:</strong> QA melhorada</li>
+                            <li><strong>Expandir cápsulas compostáveis:</strong> Brasil 2025</li>
+                            <li><strong>Marketing Millennials:</strong> +50% budget digital</li>
+                        </ul>
+                    </div>
+
+                    <div class="competitor-card dolce-gusto">
+                        <div class="competitor-title">🔄 Prioridade MÉDIA</div>
+                        <ul>
+                            <li><strong>Programa peças reposição:</strong> Sustentabilidade</li>
+                            <li><strong>Otimizar SMS marketing:</strong> Opt-out fácil</li>
+                            <li><strong>Parcerias influencers:</strong> Escala nacional</li>
+                        </ul>
+                    </div>
+
+                    <div class="competitor-card cafelor">
+                        <div class="competitor-title">⏳ Prioridade BAIXA</div>
+                        <ul>
+                            <li><strong>Explorar mercado B2B:</strong> Escritórios</li>
+                            <li><strong>Limited editions:</strong> Sazonais</li>
+                            <li><strong>Voice commerce:</strong> Alexa integration</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-box">
+                <div class="insight-title">💡 Roadmap 2025 - Foco Vertuo</div>
+                <ul>
+                    <li><strong>Q1:</strong> Resolver problemas técnicos Vertuo + lançar peças reposição</li>
+                    <li><strong>Q2:</strong> Campanha digital Millennials + influencers nacionais</li>
+                    <li><strong>Q3:</strong> Lançar cápsulas compostáveis no Brasil</li>
+                    <li><strong>Q4:</strong> Expansão e-commerce + programa fidelidade renovado</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tabs;
+            
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            tabs = document.getElementsByClassName("tab");
+            for (i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Animate progress bars when tab is opened
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            const scoreBarFills = document.querySelectorAll('.score-fill');
+            
+            // Initial animation
+            setTimeout(() => {
+                progressBars.forEach(bar => {
+                    bar.style.width = bar.style.width || '0%';
+                });
+                scoreBarFills.forEach(bar => {
+                    bar.style.width = bar.style.width || '0%';
+                });
+            }, 500);
+            
+            // Re-animate when switching tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    setTimeout(() => {
+                        const activeTabContent = document.querySelector('.tab-content.active');
+                        const activeBars = activeTabContent.querySelectorAll('.progress-fill, .score-fill');
+                        activeBars.forEach(bar => {
+                            const width = bar.style.width;
+                            bar.style.width = '0%';
+                            setTimeout(() => {
+                                bar.style.width = width;
+                            }, 100);
+                        });
+                    }, 100);
+                });
+            });
+        });
+
+        // Add hover effects
+        document.querySelectorAll('.competitor-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>
